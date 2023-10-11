@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Gruppo&display=swap');
+
+body {
+    font-family: 'Dela Gothic One', cursive;
+font-family: 'Gruppo', sans-serif;
+    background-color: #186F65;
+}
+
+#select-pet {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#title {
+    font-family: 'Dela Gothic One', cursive;
+    color: white;
+    font-size: 40px;
+}
+
+.sub-title {
+    color: white;
+    font-size: 25px;
+}
+
+.tarjetas {
+    display: flex;
+    gap: 10px;
+}
+
+.tarjeta-pet {
+    background-color: #B5CB99;
+    color: navy;
+    width: 180px;
+    height: 120px;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 20px;
+    display: flex;
+    color: #B2533E;
+    justify-content: center;
+    align-items: center;
+}
+
+.tarjeta-pet img {
+    width: 80px;
+}
+
+.btn {
+    background-color: #FCE09B;
+    color: navy;
+    width: 150px;
+    height: 50px;
+    padding: 5px;
+    box-sizing: border-box;
+    margin: 20px 5px 5px 5px;
+    border-radius: 30px;
+    border-color: #B2533E;
+    font-family: 'Gruppo', sans-serif;
+    font-size: 17px;
+    text-align: center;
+}
+
+.botones-ataque {
+    display: flex;
+}
+
+.btn-select {
+    background-color: transparent;
+    width: 125px;
+    height: 55px;
+    padding: 5px;
+    margin: 20px 5px 5px 5px;
+    border-radius: 25px;
+    border: 2px solid white;
+    font-family: 'Gruppo', sans-serif;
+}
+
+#reiniciar {
+    background-color: #186F65;
+    width: 100px;
+    height: 50px;
+    margin: 5px;
+    border-radius: 15px;
+    box-sizing: border-box;
+    border-color: #B2533E;
+    color: white;
+    align-items: center;
+    justify-content: center;
+}
+
+input {
+    display: none;
+}
+
+input:checked + label {
+    background-color: #FCE09B;
+}
+
+#select-attack {
+    flex-direction: column;
+    align-items: center;
+}
+
+#mensaje {
+    width: 300px;
+    background-color: #B5CB99;
+    padding: 40px;
+    margin-top: 25px;
+    border-radius: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+#ataques {
+    display: grid;
+    grid-template-columns: 100px 100px;
+    margin: 25px;
+    padding: 15px;
+}
+
+.ataques-player, .ataques-enemi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (max-width: 360px) {
+    .tarjetas, .botones-ataque {
+        flex-direction: column;
+    }
+}
