@@ -162,14 +162,17 @@ secuenciaAtaque = ()=> {
                 ataquePlayer.push('FUEGO');
                 console.log(ataquePlayer);
                 boton.style.background = '#112f58'
+                boton.disabled = true;
             }else if (e.target.innerText == "💧") {
                 ataquePlayer.push('AGUA');
                 console.log(ataquePlayer);
                 boton.style.background = '#112f58'
+                boton.disabled = true;
             }else {
                 ataquePlayer.push('TIERRA');
                 console.log(ataquePlayer);
                 boton.style.background = '#112f58'
+                boton.disabled = true;
             }
             ataqueEnemi();
 
@@ -218,8 +221,6 @@ combate = ()=> {
         if (ataquePlayer[index] == attackEnemi[index]) {
             indexOponentes(index, index);
             crearMensaje('EMPATASTE✌️');
-            victoriasPlayer++;
-            spanVidasPlayer.innerHTML = victoriasPlayer;
         }else if (ataquePlayer[index] == 'AGUA' && attackEnemi[index] == 'FUEGO' || ataquePlayer[index] == 'FUEGO' && attackEnemi[index] == 'TIERRA' || ataquePlayer[index] == 'TIERRA' && attackEnemi[index] == 'AGUA') {
             indexOponentes(index, index);
             crearMensaje('GANASTE😎');
@@ -267,11 +268,6 @@ mensajeFinal = (resultFinal)=> {
 
     sectionMensaje.innerHTML = resultFinal;
 
-    botonFuego.disabled = true;
-    
-    botonAgua.disabled = true;
-    
-    botonTierra.disabled = true;
 }
 
 
