@@ -32,8 +32,10 @@ let botonFuego;
 let botonAgua;
 let botonTierra;
 let botones = [];
-let vidaPlayer = 3;
-let vidaEnemi = 3;
+let indexAtaquePl;
+let indexAtaqueEn;
+let victoriasPlayer = 0;
+let victoriasEnemi = 0;
 
 class Mokepon {
     constructor(nombre, foto, vida){
@@ -195,32 +197,50 @@ ataqueEnemi = ()=>{
         attackEnemi.push('TIERRA');
     }
     console.log(attackEnemi);
+    iniciarPelea();
+}
+
+iniciarPelea = ()=> {
+    if (ataquePlayer.length == 5) {
     combate();
+    }
+}
+
+indexOponentes = (player, enemi)=> {
+    indexAtaquePl = ataquePlayer[player];
+    indexAtaqueEn = attackEnemi[enemi];
 }
 
 combate = ()=> {
     
-
-    if (ataquePlayer == attackEnemi) {
-        crearMensaje('EMPATASTE✌️');
-    }else if (ataquePlayer == 'AGUA' && attackEnemi == 'FUEGO' || ataquePlayer == 'TIERRA' && attackEnemi == 'AGUA' ||ataquePlayer == 'FUEGO' && attackEnemi == 'TIERRA') {
-        crearMensaje('GANASTE😎');
-        vidaEnemi--;
-        spanVidasEnemi.innerHTML = vidaEnemi;
-    }else {
-        crearMensaje('PERDISTE😭');
-        vidaPlayer--;
-        spanVidasPlayer.innerHTML = vidaPlayer;
+    for (let index = 0; index < ataquePlayer.length; index++) {
+        if (ataquePlayer.length[index] == attackEnemi.length[index]) {
+            indexOponentes(index, index);
+            crearMensaje('EMPATASTE✌️');
+        }else if (ataquePlayer[index] == 'AGUA' && attackEnemi[index] == 'FUEGO' || ataquePlayer[index] == 'FUEGO' && attackEnemi[index] == 'TIERRA') {
+            indexOponentes(index, index);
+            crearMensaje('GANASTE😎');
+            victoriasPlayer++;
+            spanVidasPlayer.innerHTML = victoriasPlayer;
+        }else {
+            indexOponentes(index, index);
+            crearMensaje('PERDISTE😭');
+            victoriasEnemi++;
+            spanVidasEnemi.innerHTML = spanVidasEnemi;
+        }
+        
     }
-    revisarVidas();
+    revisarVictorias();
 }
 
 
-revisarVidas = ()=> {
-    if (vidaEnemi == 0) {
-       mensajeFinal('FELICIDADES, HAZ GANADO LA PARTIDA!🔥😎')
-    }else if (vidaPlayer == 0) {
-        mensajeFinal('LO SIENTO, HAZ PERDIDO LA PARTIDA!💔😭')
+revisarVictorias = ()=> {
+    if (victoriasEnemi == victoriasPlayer) {
+       mensajeFinal('PARECE QUE HAY UN EMPATE!✌️');
+    }else if (victoriasPlayer > victoriasEnemi) {
+        mensajeFinal('FELICIDADES, HAZ GANADO LA PARTIDA!🔥😎');
+    }else {
+        mensajeFinal('LO SIENTO, HAZ PERDIDO LA PARTIDA!💔😭');
     }
 }
 
@@ -230,8 +250,8 @@ crearMensaje = (resultado)=> {
     let nuevoAtaqueEnemi = document.createElement('p');
 
     sectionMensaje.innerHTML = resultado;
-    nuevoAtaquePlayer.innerHTML = ataquePlayer;
-    nuevoAtaqueEnemi.innerHTML = attackEnemi;
+    nuevoAtaquePlayer.innerHTML = indexAtaquePl;
+    nuevoAtaqueEnemi.innerHTML = indexAtaqueEn;
 
    resultadoPlayer.appendChild(nuevoAtaquePlayer);
    resultadoEnemi.appendChild(nuevoAtaqueEnemi);
