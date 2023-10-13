@@ -47,6 +47,12 @@ class Mokepon {
         this.foto = foto;
         this.vida = vida;
         this.ataques = [];
+        this.x = 20;
+        this.y = 30;
+        this.ancho = 80;
+        this.alto = 80;
+        this.mapafoto = new Image();
+        this.mapafoto.src = foto;
     }
 }
 
@@ -118,15 +124,6 @@ seleccionarMascotaJugador = ()=>{
 
     // sectionSelectAttack.style.display = 'flex';
     sectionMapa.style.display = 'flex';
-    let imagenCapipepo = new Image();
-    imagenCapipepo.src = capipepo.foto;
-    lienzo.drawImage(
-        imagenCapipepo,
-        20,
-        40,
-        100,
-        100
-    )
 
     if (inputHipodoge.checked) {
         petPlayer.innerHTML = inputHipodoge.id;
@@ -288,6 +285,22 @@ mensajeFinal = (resultFinal)=> {
 
 replayGame = ()=>{
     location.reload();
+}
+
+pintarPersonaje = ()=> {
+    lienzo.clearRect(0, 0, mapa.clientWidth, mapa.height);
+    lienzo.drawImage(
+        capipepo.mapafoto,
+        capipepo.x,
+        capipepo.y,
+        capipepo.ancho,
+        capipepo.alto
+    )
+}
+
+moverCapipepo = ()=> {
+    capipepo.x = capipepo.x + 5;
+    pintarPersonaje();
 }
 
 window.addEventListener('load', iniciarJuego);
