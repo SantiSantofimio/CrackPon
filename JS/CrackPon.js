@@ -303,4 +303,20 @@ moverCapipepo = ()=> {
     pintarPersonaje();
 }
 
+moverCapipepoIzquierda = ()=> {
+    capipepo.x = capipepo.x - 5;
+    pintarPersonaje();
+}
+
+moverCapipepoArriba = ()=> {
+    capipepo.y = capipepo.y - 5;
+    pintarPersonaje();
+}
+
+moverCapipepoAbajo = ()=> {
+    capipepo.y = capipepo.y + 5;
+    pintarPersonaje();
+}
+
+
 window.addEventListener('load', iniciarJuego);
