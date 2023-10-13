@@ -71,6 +71,7 @@ capipepo.ataques.push(
 ratigueya.ataques.push(
     {nombre: '🔥', id:"btn-fuego"},
     {nombre: '🔥', id:"btn-fuego"},
+    {nombre: '🔥', id:"btn-fuego"},
     {nombre: '💧', id:"btn-agua"},
     {nombre: '🌱', id:"btn-tierra"}
 );
@@ -214,10 +215,12 @@ indexOponentes = (player, enemi)=> {
 combate = ()=> {
     
     for (let index = 0; index < ataquePlayer.length; index++) {
-        if (ataquePlayer.length[index] == attackEnemi.length[index]) {
+        if (ataquePlayer[index] == attackEnemi[index]) {
             indexOponentes(index, index);
             crearMensaje('EMPATASTE✌️');
-        }else if (ataquePlayer[index] == 'AGUA' && attackEnemi[index] == 'FUEGO' || ataquePlayer[index] == 'FUEGO' && attackEnemi[index] == 'TIERRA') {
+            victoriasPlayer++;
+            spanVidasPlayer.innerHTML = victoriasPlayer;
+        }else if (ataquePlayer[index] == 'AGUA' && attackEnemi[index] == 'FUEGO' || ataquePlayer[index] == 'FUEGO' && attackEnemi[index] == 'TIERRA' || ataquePlayer[index] == 'TIERRA' && attackEnemi[index] == 'AGUA') {
             indexOponentes(index, index);
             crearMensaje('GANASTE😎');
             victoriasPlayer++;
@@ -226,7 +229,7 @@ combate = ()=> {
             indexOponentes(index, index);
             crearMensaje('PERDISTE😭');
             victoriasEnemi++;
-            spanVidasEnemi.innerHTML = spanVidasEnemi;
+            spanVidasEnemi.innerHTML = victoriasEnemi;
         }
         
     }
