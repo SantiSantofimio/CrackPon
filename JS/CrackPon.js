@@ -129,6 +129,9 @@ seleccionarMascotaJugador = ()=>{
     sectionMapa.style.display = 'flex';
     intervalo = setInterval(pintarPersonaje, 50);
 
+    window.addEventListener('keydown', pressTecla);
+    window.addEventListener('keyup', detenerMovimiento);
+
     if (inputHipodoge.checked) {
         petPlayer.innerHTML = inputHipodoge.id;
         mascotaPlayer = inputHipodoge.id;
@@ -323,6 +326,29 @@ moverAbajo = ()=> {
 detenerMovimiento = ()=> {
     capipepo.velocidadX = 0;
     capipepo.velocidadY = 0;
+}
+
+pressTecla = (event)=> {
+    switch (event.key) {
+        case 'ArrowUp':
+            moverArriba();
+            break;
+        
+        case 'ArrowDown':
+            moverAbajo();
+            break;
+        
+        case 'ArrowLeft':
+            moverIzquierda();
+            break;
+
+        case 'ArrowRight':
+            moverDerecha();
+            break;
+
+        default:
+            break;
+    }
 }
 
 window.addEventListener('load', iniciarJuego);
