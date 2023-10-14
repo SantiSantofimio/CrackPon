@@ -127,10 +127,7 @@ seleccionarMascotaJugador = ()=>{
 
     // sectionSelectAttack.style.display = 'flex';
     sectionMapa.style.display = 'flex';
-    intervalo = setInterval(pintarPersonaje, 50);
-
-    window.addEventListener('keydown', pressTecla);
-    window.addEventListener('keyup', detenerMovimiento);
+    iniciarMapa();
 
     if (inputHipodoge.checked) {
         petPlayer.innerHTML = inputHipodoge.id;
@@ -349,6 +346,13 @@ pressTecla = (event)=> {
         default:
             break;
     }
+}
+
+iniciarMapa = ()=> {
+    intervalo = setInterval(pintarPersonaje, 50);
+
+    window.addEventListener('keydown', pressTecla);
+    window.addEventListener('keyup', detenerMovimiento);
 }
 
 window.addEventListener('load', iniciarJuego);
