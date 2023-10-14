@@ -40,6 +40,7 @@ let indexAtaqueEn;
 let victoriasPlayer = 0;
 let victoriasEnemi = 0;
 let lienzo = mapa.getContext("2d");
+let intervalo;
 
 class Mokepon {
     constructor(nombre, foto, vida){
@@ -53,6 +54,8 @@ class Mokepon {
         this.alto = 80;
         this.mapafoto = new Image();
         this.mapafoto.src = foto;
+        this.velocidadX = 0;
+        this.velocidadY = 0;
     }
 }
 
@@ -124,6 +127,7 @@ seleccionarMascotaJugador = ()=>{
 
     // sectionSelectAttack.style.display = 'flex';
     sectionMapa.style.display = 'flex';
+    intervalo = setInterval(pintarPersonaje, 50);
 
     if (inputHipodoge.checked) {
         petPlayer.innerHTML = inputHipodoge.id;
@@ -288,6 +292,8 @@ replayGame = ()=>{
 }
 
 pintarPersonaje = ()=> {
+    capipepo.x = capipepo.x + capipepo.velocidadX;
+    capipepo.y = capipepo.y + capipepo.velocidadY;
     lienzo.clearRect(0, 0, mapa.clientWidth, mapa.height);
     lienzo.drawImage(
         capipepo.mapafoto,
@@ -298,25 +304,25 @@ pintarPersonaje = ()=> {
     )
 }
 
-moverCapipepo = ()=> {
-    capipepo.x = capipepo.x + 5;
-    pintarPersonaje();
+moverDerecha = ()=> {
+    capipepo.velocidadX = 5;
 }
 
-moverCapipepoIzquierda = ()=> {
-    capipepo.x = capipepo.x - 5;
-    pintarPersonaje();
+moverIzquierda = ()=> {
+    capipepo.velocidadX = -5;
 }
 
-moverCapipepoArriba = ()=> {
-    capipepo.y = capipepo.y - 5;
-    pintarPersonaje();
+moverArriba = ()=> {
+    capipepo.velocidadY = -5;
 }
 
-moverCapipepoAbajo = ()=> {
-    capipepo.y = capipepo.y + 5;
-    pintarPersonaje();
+moverAbajo = ()=> {
+    capipepo.velocidadY = 5;
 }
 
+detenerMovimiento = ()=> {
+    capipepo.velocidadX = 0;
+    capipepo.velocidadY = 0;
+}
 
 window.addEventListener('load', iniciarJuego);
