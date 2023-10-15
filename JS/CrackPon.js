@@ -44,6 +44,22 @@ let lienzo = mapa.getContext("2d");
 let intervalo;
 let mapaBackground = new Image();
 mapaBackground.src = './assets/mokemap.png';
+let alturaBuscada;
+let anchoDelMapa = window.innerWidth - 20;
+const anchoMaximoMapa = 450;
+
+if (anchoDelMapa > anchoMaximoMapa) {
+    anchoDelMapa = anchoMaximoMapa - 20;
+}
+
+alturaBuscada = anchoDelMapa * 600 / 800;
+
+mapa.width = anchoDelMapa;
+mapa.height = alturaBuscada;
+
+aleatorio = (min, max)=>{
+    return Math.floor(Math.random() * (max - min + 1) + min)
+}
 
 class Mokepon {
     constructor(nombre, foto, vida, fotoMapa, x = 10, y = 10,){
@@ -51,10 +67,10 @@ class Mokepon {
         this.foto = foto;
         this.vida = vida;
         this.ataques = [];
-        this.x = x;
-        this.y = y;
         this.ancho = 40;
         this.alto = 40;
+        this.x = aleatorio(0, mapa.width - this.ancho);
+        this.y = aleatorio(0, mapa.height - this.alto);
         this.mapafoto = new Image();
         this.mapafoto.src = fotoMapa;
         this.velocidadX = 0;
@@ -132,10 +148,6 @@ ratigueyaEnemi.ataques.push(
 );
 
 mokepones.push(hipodoge, capipepo, ratigueya);
-
-aleatorio = (min, max)=>{
-    return Math.floor(Math.random() * (max - min + 1) + min)
-}
 
 iniciarJuego = ()=>{
     
@@ -403,8 +415,6 @@ pressTecla = (event)=> {
 }
 
 iniciarMapa = ()=> {
-    mapa.width = 600;
-    mapa.height = 400;
     petPlayerObjeto = obtenerObjetoPet(mascotaPlayer);
     intervalo = setInterval(pintarCanvas, 50);
 
@@ -439,7 +449,6 @@ revisarColision = (enemigo)=> {
     ) {
         return;
     }
-    console.log("hay colision");
     detenerMovimiento();
     clearInterval(intervalo);
     sectionSelectAttack.style.display = 'flex';
