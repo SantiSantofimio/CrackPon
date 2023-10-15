@@ -264,10 +264,12 @@ seleccionarPetEnemi = (enemigo)=>{
 ataqueEnemi = ()=>{
     console.log(ataquesMokeponEnemi);
     let randomAttack = aleatorio(0, ataquesMokeponEnemi.length -1);
+    let ataque = ataquesMokeponEnemi[randomAttack].nombre;
+    ataquesMokeponEnemi.splice(randomAttack, 1);
 
-    if (randomAttack == 0 || randomAttack == 1) {
+    if (ataque == "💧") {
         attackEnemi.push('AGUA');
-    }else if (randomAttack == 3 || randomAttack == 4) {
+    }else if (ataque == "🔥") {
         attackEnemi.push('FUEGO');
     }else{
         attackEnemi.push('TIERRA');
