@@ -62,7 +62,7 @@ aleatorio = (min, max)=>{
 }
 
 class Mokepon {
-    constructor(nombre, foto, vida, fotoMapa, x = 10, y = 10,){
+    constructor(nombre, foto, vida, fotoMapa){
         this.nombre = nombre;
         this.foto = foto;
         this.vida = vida;
@@ -93,11 +93,11 @@ let capipepo = new Mokepon ('Capipepo', './assets/mokepons_mokepon_capipepo_atta
 
 let ratigueya = new Mokepon ('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png');
 
-let hipodogeEnemi = new Mokepon ('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5, './assets/hipodoge.png', 300, 250);
+let hipodogeEnemi = new Mokepon ('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5, './assets/hipodoge.png');
 
-let capipepoEnemi = new Mokepon ('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5, './assets/capipepo.png', 120, 220);
+let capipepoEnemi = new Mokepon ('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5, './assets/capipepo.png');
 
-let ratigueyaEnemi = new Mokepon ('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png', 380, 180);
+let ratigueyaEnemi = new Mokepon ('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png');
 
 hipodoge.ataques.push(
     {nombre: '💧', id:"btn-agua"},

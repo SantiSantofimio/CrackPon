@@ -134,9 +134,31 @@ input:checked + label {
     justify-content: center;
 }
 
+#ver-mapa button {
+    background-color: #FCE09B;
+    color: navy;
+    width: 90px;
+    height: 40px;
+    padding: 5px;
+    box-sizing: border-box;
+    margin: 7px;
+    border-radius: 30px;
+    border-color: #B2533E;
+    font-family: 'Gruppo', sans-serif;
+    font-size: 17px;
+    text-align: center;
+}
 
-@media (max-width: 360px) {
+@media (max-width: 560px) {
     .tarjetas, .botones-ataque {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 300px) {
+    #ver-mapa div {
+        display: flex;
+        align-items: center;
         flex-direction: column;
     }
 }
