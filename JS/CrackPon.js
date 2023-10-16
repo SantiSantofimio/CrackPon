@@ -262,8 +262,22 @@ secuenciaAtaque = ()=> {
                 boton.style.background = '#112f58'
                 boton.disabled = true;
             }
-            ataqueEnemi();
+            // ataqueEnemi();
+            if (ataquePlayer.length == 5) {
+                enviarAtaques()
+            }
+        })
+    })
+}
 
+enviarAtaques = ()=> {
+    fetch(`http://localhost:8080/mokepon/${jugadorId}/ataques`, {
+        method: "post",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            ataques: ataquePlayer
         })
     })
 }
@@ -385,18 +399,21 @@ pintarCanvas = ()=> {
     enviarPosicion(petPlayerObjeto.x, petPlayerObjeto.y)
 
     mokeponesEnemigos.forEach(function(mokepon) {
-        mokepon.pintarMokepon()
+        if (mokepon != undefined) {
+            mokepon.pintarMokepon()
+            revisarColision(mokepon)
+        }
     })
 
     // hipodogeEnemi.pintarMokepon();
     // capipepoEnemi.pintarMokepon();
     // ratigueyaEnemi.pintarMokepon();
 
-    if(petPlayerObjeto.velocidadX !== 0 || petPlayerObjeto.velocidadY !== 0) {
-        revisarColision(hipodogeEnemi);
-        revisarColision(capipepoEnemi);
-        revisarColision(ratigueyaEnemi);
-    }
+    // if(petPlayerObjeto.velocidadX !== 0 || petPlayerObjeto.velocidadY !== 0) {
+    //     revisarColision(hipodogeEnemi);
+    //     revisarColision(capipepoEnemi);
+    //     revisarColision(ratigueyaEnemi);
+    // }
 }
 
 enviarPosicion = (x, y)=> {
@@ -417,17 +434,20 @@ enviarPosicion = (x, y)=> {
                     console.log(enemigos);
                     mokeponesEnemigos = enemigos.map(function(enemigo){
                         let mokeponEnemigo = null;
-                        const mokeponNombre = enemigo.mokepon.nombre
-                        if (mokeponNombre == "Hipodoge") {
+                        if (enemigo.mokepon != undefined) {
+                            const mokeponNombre = enemigo.mokepon.nombre
+                            if (mokeponNombre == "Hipodoge") {
                             mokeponEnemigo = new Mokepon ('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5, './assets/hipodoge.png');
-                        }else if (mokeponNombre == "Capipepo") {
+                            }else if (mokeponNombre == "Capipepo") {
                             mokeponEnemigo = new Mokepon ('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5, './assets/capipepo.png');
-                        }else if (mokeponNombre == "Ratigueya") {
+                            }else if (mokeponNombre == "Ratigueya") {
                             mokeponEnemigo = new Mokepon ('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png');
-                        }
+                            }
 
-                        mokeponEnemigo.x = enemigo.x
-                        mokeponEnemigo.y = enemigo.y 
+                            mokeponEnemigo.x = enemigo.x
+                            mokeponEnemigo.y = enemigo.y
+                        }
+                         
 
                         return mokeponEnemigo
                     })
