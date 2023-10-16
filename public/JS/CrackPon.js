@@ -170,7 +170,7 @@ iniciarJuego = ()=>{
 }
 
 unirseAlJuego = ()=> {
-    fetch("http://localhost:8080/unirse")
+    fetch("http://192.168.1.3:8080/unirse")
         .then(function(res){
             if (res.ok) {
                 res.text()
@@ -184,9 +184,6 @@ unirseAlJuego = ()=> {
 
 seleccionarMascotaJugador = ()=>{
     
-    sectionSelectPet.style.display = 'none';
-    
-
     if (inputHipodoge.checked) {
         petPlayer.innerHTML = inputHipodoge.id;
         mascotaPlayer = inputHipodoge.id;
@@ -198,7 +195,10 @@ seleccionarMascotaJugador = ()=>{
         mascotaPlayer = inputRatigueya.id;
     }else{
         alert('No has seleccionado ninguna mascota');
+        return
     }
+
+    sectionSelectPet.style.display = 'none';
 
     selecionarMokepon(mascotaPlayer);
     
@@ -208,7 +208,7 @@ seleccionarMascotaJugador = ()=>{
 }
 
 selecionarMokepon = (mascotaPlayer) => {
-    fetch(`http://localhost:8080/mokepon/${jugadorId}`, {
+    fetch(`http://192.168.1.3:8080/mokepon/${jugadorId}`, {
         method: "post",
         headers: {
             "Content-Type": "application/json"
@@ -272,7 +272,7 @@ secuenciaAtaque = ()=> {
 }
 
 enviarAtaques = ()=> {
-    fetch(`http://localhost:8080/mokepon/${jugadorId}/ataques`, {
+    fetch(`http://192.168.1.3:8080/mokepon/${jugadorId}/ataques`, {
         method: "post",
         headers: {
             "Content-Type": "application/json"
@@ -285,7 +285,7 @@ enviarAtaques = ()=> {
 }
 
 obtenerAtaques = ()=> {
-    fetch(`http://localhost:8080/mokepon/${enemigoId}/ataques`)
+    fetch(`http://192.168.1.3:8080/mokepon/${enemigoId}/ataques`)
         .then(function(res) {
             if (res.ok) {
                 res.json()
@@ -435,7 +435,7 @@ pintarCanvas = ()=> {
 }
 
 enviarPosicion = (x, y)=> {
-    fetch(`http://localhost:8080/mokepon/${jugadorId}/posicion`, {
+    fetch(`http://192.168.1.3:8080/mokepon/${jugadorId}/posicion`, {
         method: "post",
         headers: {
             "Content-Type": "application/JSON"
@@ -552,6 +552,10 @@ revisarColision = (enemigo)=> {
         izquierdaMascota > derechaEnemigo
     ) {
         return;
+    }
+
+    if(enemigo.x == undefined || enemigo.y == undefined){
+        return
     }
     detenerMovimiento();
     clearInterval(intervalo);
