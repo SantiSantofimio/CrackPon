@@ -17,6 +17,7 @@ app.use(cors())
 app.use(express.json())
 
 const jugadores = [];
+const batallas = {}; // Rastrear batallas activas
 
 class Jugador {
     constructor(id, socketId) {
@@ -66,7 +67,9 @@ io.on("connection", (socket) => {
         const jugadorIndex = jugadores.findIndex((jugador) => jugadorId === jugador.id);
         if (jugadorIndex >= 0) {
             jugadores[jugadorIndex].asignarMokepon(mokeponObj);
-            io.emit("actualizar-enemigos", jugadores);
+            // Enviar solo los enemigos (no incluir al jugador actual)
+            const enemigos = jugadores.filter((jugador) => jugadorId !== jugador.id);
+            io.emit("actualizar-enemigos", enemigos);
         }
     });
 
@@ -90,16 +93,28 @@ io.on("connection", (socket) => {
         const jugadorIndex = jugadores.findIndex((jugador) => jugadorId === jugador.id);
         if (jugadorIndex >= 0) {
             jugadores[jugadorIndex].asignarAtaques(ataques);
-            console.log(`Jugador ${jugadorId} envió ataques:`, ataques);
-        }
-    });
-
-    // Evento: Obtener ataques del enemigo
-    socket.on("obtener-ataques", (enemigoId) => {
-        const enemigo = jugadores.find((jugador) => enemigoId === jugador.id);
-        if (enemigo && enemigo.ataques && enemigo.ataques.length > 0) {
-            console.log(`Enviando ataques de ${enemigoId}:`, enemigo.ataques);
-            socket.emit("ataques-enemigo", enemigo.ataques);
+            console.log(`Jugador ${jugadorId} envió ataques`);
+            
+            // Buscar otros jugadores
+            const otrosJugadores = jugadores.filter((j) => j.id !== jugadorId);
+            
+            // Si hay otro jugador y ya envió ataques, iniciar combate
+            otrosJugadores.forEach((otro) => {
+                if (otro.ataques && otro.ataques.length === 5) {
+                    console.log(`COMBATE: ${jugadorId} vs ${otro.id}`);
+                    
+                    // Enviar ataques del otro al jugador actual
+                    io.to(jugadores[jugadorIndex].socketId).emit("ataques-enemigo", otro.ataques);
+                    
+                    // Enviar ataques del jugador actual al otro
+                    io.to(otro.socketId).emit("ataques-enemigo", ataques);
+                    
+                    // Resetear ataques despues de emitir para permitir nuevo combate
+                    jugadores[jugadorIndex].ataques = [];
+                    otro.ataques = [];
+                    console.log("Ataques reiniciados para permitir nuevo combate");
+                }
+            });
         }
     });
 
@@ -107,9 +122,13 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         const index = jugadores.findIndex((j) => j.socketId === socket.id);
         if (index >= 0) {
-            console.log("Jugador desconectado:", jugadores[index].id);
+            const idJugadorDesconectado = jugadores[index].id;
+            console.log("Jugador desconectado:", idJugadorDesconectado);
             jugadores.splice(index, 1);
-            io.emit("actualizar-enemigos", jugadores);
+            
+            // Notificar a los demás jugadores
+            const enemigos = jugadores.filter((j) => j.id !== idJugadorDesconectado);
+            io.emit("actualizar-enemigos", enemigos);
         }
     });
 });

@@ -186,35 +186,65 @@ unirseAlJuego = ()=> {
     // Escuchar actualizaciones de enemigos para el mapa
     socket.on("actualizar-enemigos", (enemigos) => {
         console.log("Enemigos actualizados:", enemigos);
-        mokeponesEnemigos = enemigos.map(function(enemigo){
-            let mokeponEnemigo = null;
+        
+        // Limpiar y recrear la lista de enemigos
+        mokeponesEnemigos = [];
+        
+        enemigos.forEach(function(enemigo){
             if (enemigo.mokepon != undefined) {
-                const mokeponNombre = enemigo.mokepon.nombre
+                const mokeponNombre = enemigo.mokepon.nombre;
+                let mokeponEnemigo = null;
+                
+                // Crear nuevo mokepon enemigo
                 if (mokeponNombre == "Hipodoge") {
-                mokeponEnemigo = new Mokepon ('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5, './assets/hipodoge.png', enemigo.id);
-                }else if (mokeponNombre == "Capipepo") {
-                mokeponEnemigo = new Mokepon ('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5, './assets/capipepo.png', enemigo.id);
-                }else if (mokeponNombre == "Ratigueya") {
-                mokeponEnemigo = new Mokepon ('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png', enemigo.id);
+                    mokeponEnemigo = new Mokepon('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5, './assets/hipodoge.png', enemigo.id);
+                } else if (mokeponNombre == "Capipepo") {
+                    mokeponEnemigo = new Mokepon('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5, './assets/capipepo.png', enemigo.id);
+                } else if (mokeponNombre == "Ratigueya") {
+                    mokeponEnemigo = new Mokepon('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png', enemigo.id);
                 }
-
+                
+                // Posición inicial lejana para enemigos nuevos
                 if (mokeponEnemigo) {
-                    mokeponEnemigo.x = enemigo.x || 0;
-                    mokeponEnemigo.y = enemigo.y || 0;
+                    const lado = Math.random();
+                    if (lado < 0.5) {
+                        mokeponEnemigo.x = mapa.width - 100;
+                    } else {
+                        mokeponEnemigo.x = 50;
+                    }
+                    mokeponEnemigo.y = aleatorio(50, mapa.height - 100);
+                    
+                    // Actualizar con posición del servidor si disponible
+                    if (enemigo.x !== undefined && enemigo.y !== undefined) {
+                        mokeponEnemigo.x = enemigo.x;
+                        mokeponEnemigo.y = enemigo.y;
+                    }
+                    
+                    mokeponesEnemigos.push(mokeponEnemigo);
+                    console.log("Enemigo creado:", mokeponNombre, "ID:", enemigo.id);
                 }
             }
-            return mokeponEnemigo
-        })
+        });
     });
 
     // Listener para ataques del enemigo (registrado UNA SOLA VEZ)
     socket.on("ataques-enemigo", (ataques) => {
         console.log("Ataques recibidos del enemigo:", ataques);
-        if (ataques && ataques.length === 5 && !combateEnProgreso) {
+        if (ataques && ataques.length === 5) {
+            console.log("Ataques válidos recibidos. Procesando combate...");
             attackEnemi = ataques;
-            combateEnProgreso = true;
             clearInterval(intervalo);
-            combate();
+            
+            // Permitir que se procese el combate incluso si combateEnProgreso es true
+            // porque esto significa que estamos en la fase de selección de ataques
+            if (ataquePlayer && ataquePlayer.length === 5) {
+                console.log("Tenemos ataques del jugador. Iniciando combate...");
+                combate();
+            } else {
+                console.warn("Ataques del enemigo recibidos pero aún no tenemos ataques del jugador");
+            }
+        } else {
+            console.warn("Ataques inválidos o incompletos:", ataques?.length);
         }
     });
 }
@@ -309,17 +339,7 @@ enviarAtaques = ()=> {
         jugadorId: jugadorId,
         ataques: ataquePlayer
     });
-
-    // Polling para obtener ataques del enemigo
-    intervalo = setInterval(() => {
-        if (!combateEnProgreso) {
-            obtenerAtaques();
-        }
-    }, 100);
-}
-
-obtenerAtaques = ()=> {
-    socket.emit("obtener-ataques", enemigoId);
+    console.log("Esperando ataques del enemigo...");
 }
 
 seleccionarPetEnemi = (enemigo)=>{
@@ -368,76 +388,133 @@ combate = ()=> {
     console.log("Ataques jugador:", ataquePlayer);
     console.log("Ataques enemigo:", attackEnemi);
     
-    clearInterval(intervalo)
+    // Validar que tenemos ataques
+    if (!ataquePlayer || ataquePlayer.length !== 5 || !attackEnemi || attackEnemi.length !== 5) {
+        console.error("Ataques incompletos. Jugador:", ataquePlayer?.length, "Enemigo:", attackEnemi?.length);
+        menuMensajeFinal('ERROR: Ataques incompletos');
+        return;
+    }
+    
+    clearInterval(intervalo);
+    
+    // Limpiar resultados anteriores
+    resultadoPlayer.innerHTML = '';
+    resultadoEnemi.innerHTML = '';
+    sectionMensaje.innerHTML = '';
+    
+    // Contar victorias de esta batalla
+    let victoriasEstaBatalla = 0;
+    let derrotasEstaBatalla = 0;
+    let empatesEstaBatalla = 0;
+    let resultadoCombate = '';
     
     for (let index = 0; index < ataquePlayer.length; index++) {
+        indexOponentes(index, index);
+        
+        console.log(`Ronda ${index + 1}: ${ataquePlayer[index]} vs ${attackEnemi[index]}`);
+        
         if (ataquePlayer[index] == attackEnemi[index]) {
-            indexOponentes(index, index);
-            crearMensaje('EMPATASTE✌️');
-        }else if (ataquePlayer[index] == 'AGUA' && attackEnemi[index] == 'FUEGO' || ataquePlayer[index] == 'FUEGO' && attackEnemi[index] == 'TIERRA' || ataquePlayer[index] == 'TIERRA' && attackEnemi[index] == 'AGUA') {
-            indexOponentes(index, index);
-            crearMensaje('GANASTE😎');
+            resultadoCombate += `<div>Ronda ${index + 1}: EMPATASTE ✌️</div>`;
+            empatesEstaBatalla++;
+        }else if ((ataquePlayer[index] == 'AGUA' && attackEnemi[index] == 'FUEGO') || (ataquePlayer[index] == 'FUEGO' && attackEnemi[index] == 'TIERRA') || (ataquePlayer[index] == 'TIERRA' && attackEnemi[index] == 'AGUA')) {
+            resultadoCombate += `<div>Ronda ${index + 1}: GANASTE 😎</div>`;
+            victoriasEstaBatalla++;
             victoriasPlayer++;
             spanVidasPlayer.innerHTML = victoriasPlayer;
         }else {
-            indexOponentes(index, index);
-            crearMensaje('PERDISTE😭');
+            resultadoCombate += `<div>Ronda ${index + 1}: PERDISTE 😭</div>`;
+            derrotasEstaBatalla++;
             victoriasEnemi++;
             spanVidasEnemi.innerHTML = victoriasEnemi;
         }
         
+        // Mostrar ataques usados
+        let nuevoAtaquePlayer = document.createElement('p');
+        let nuevoAtaqueEnemi = document.createElement('p');
+        nuevoAtaquePlayer.innerHTML = indexAtaquePl;
+        nuevoAtaqueEnemi.innerHTML = indexAtaqueEn;
+        resultadoPlayer.appendChild(nuevoAtaquePlayer);
+        resultadoEnemi.appendChild(nuevoAtaqueEnemi);
     }
-    revisarVictorias();
+    
+    resultadoCombate += `<div style="margin-top: 10px; font-weight: bold;">─────────────────────</div>`;
+    resultadoCombate += `<div style="margin-top: 10px;">TU PUNTUACIÓN: ${victoriasEstaBatalla} | ENEMIGO: ${derrotasEstaBatalla}</div>`;
+    
+    sectionMensaje.innerHTML = resultadoCombate;
+    revisarVictorias(victoriasEstaBatalla, derrotasEstaBatalla, empatesEstaBatalla);
 }
 
 
-revisarVictorias = ()=> {
-    if (victoriasEnemi == victoriasPlayer) {
-       mensajeFinal('PARECE QUE HAY UN EMPATE!✌️');
-    }else if (victoriasPlayer > victoriasEnemi) {
-        mensajeFinal('FELICIDADES, HAZ GANADO LA PARTIDA!🔥😎');
-    }else {
-        mensajeFinal('LO SIENTO, HAZ PERDIDO LA PARTIDA!💔😭');
+revisarVictorias = (victorias, derrotas, empates)=> {
+    console.log("Resultado batalla - Victorias:", victorias, "Derrotas:", derrotas, "Empates:", empates);
+    
+    let mensaje = '';
+    if (victorias > derrotas) {
+        mensaje = '¡GANASTE LA BATALLA! 🔥😎';
+    } else if (derrotas > victorias) {
+        mensaje = '¡PERDISTE LA BATALLA! 💔😭';
+    } else {
+        mensaje = '¡EMPATE EN LA BATALLA! ✌️';
     }
+    
+    menuMensajeFinal(mensaje);
+}
+
+menuMensajeFinal = (resultFinal)=> {
+    console.log("Mostrando mensaje final:", resultFinal);
+    btnRplay.style.display = 'block';
+    sectionMensaje.innerHTML += `<div style="margin-top: 20px; font-size: 1.5em; font-weight: bold; padding: 20px; border: 2px solid gold;">${resultFinal}</div>`;
 }
 
 crearMensaje = (resultado)=> {
-
-    let nuevoAtaquePlayer = document.createElement('p');
-    let nuevoAtaqueEnemi = document.createElement('p');
-
-    sectionMensaje.innerHTML = resultado;
-    nuevoAtaquePlayer.innerHTML = indexAtaquePl;
-    nuevoAtaqueEnemi.innerHTML = indexAtaqueEn;
-
-   resultadoPlayer.appendChild(nuevoAtaquePlayer);
-   resultadoEnemi.appendChild(nuevoAtaqueEnemi);
-
+    // Esta función ahora se usa internamente en combate()
+    // Se mantiene por compatibilidad pero no hace nada
+    console.log("Mensaje de combate:", resultado);
 }
 
 mensajeFinal = (resultFinal)=> {
-    
-    btnRplay.style.display = 'block';
-
-    sectionMensaje.innerHTML = resultFinal;
-
+    // Mantener por compatibilidad pero usar menuMensajeFinal en su lugar
+    menuMensajeFinal(resultFinal);
 }
 
 
+
+
 replayGame = ()=>{
-    // Limpiar arrays y estado
-    ataquePlayer = [];
-    attackEnemi = [];
-    combateEnProgreso = false;
-    enemigoId = null;
-    enemigoAtaques = null;
-    
-    // Borrar resultados anteriores
-    resultadoPlayer.innerHTML = '';
-    resultadoEnemi.innerHTML = '';
-    sectionMensaje.innerHTML = 'Buena suerte!';
-    
-    location.reload();
+    try {
+        console.log("=== REINICIANDO JUEGO ===");
+        // Limpiar arrays y estado de combate
+        ataquePlayer = [];
+        attackEnemi = [];
+        combateEnProgreso = false;
+        enemigoId = null;
+        enemigoAtaques = null;
+        
+        // IMPORTANTE: Limpiar enemigos para evitar colisiones inmediatas
+        mokeponesEnemigos = [];
+        
+        // Borrar resultados y mensajes anteriores
+        resultadoPlayer.innerHTML = '';
+        resultadoEnemi.innerHTML = '';
+        sectionMensaje.innerHTML = 'Buscando nuevos enemigos...';
+        btnRplay.style.display = 'none';
+        
+        // Limpiar contenedor de ataques
+        contenedorAtaques.innerHTML = '';
+        
+        // Volver a la pantalla del mapa
+        sectionSelectAttack.style.display = 'none';
+        sectionMapa.style.display = 'flex';
+        
+        // Reiniciar el intervalo de movimiento
+        if (intervalo) clearInterval(intervalo);
+        intervalo = setInterval(pintarCanvas, 50);
+        
+        console.log("Juego reiniciado. Estado limpio.");
+    } catch (error) {
+        console.error("Error en replayGame:", error);
+        alert("Error al reiniciar el juego: " + error.message);
+    }
 }
 
 pintarCanvas = ()=> {
@@ -499,7 +576,7 @@ moverAbajo = ()=> {
 
 detenerMovimiento = ()=> {
     petPlayerObjeto.velocidadX = 0;
-    petPlayerObjeto.velocidadY = 0;petPlayerObjeto
+    petPlayerObjeto.velocidadY = 0;
 }
 
 pressTecla = (event)=> {
@@ -543,10 +620,17 @@ obtenerObjetoPet = ()=> {
 }
 
 revisarColision = (enemigo)=> {
-    const arribaEnemigo = enemigo.y;
-    const abajoEnemigo = enemigo.y + enemigo.alto;
-    const derechaEnemigo = enemigo.x + enemigo.ancho;
-    const izquierdaEnemigo = enemigo.x;
+    // Evitar colisión si ya estamos en combate
+    if (combateEnProgreso) {
+        return;
+    }
+
+    // Aumentar distancia mínima de colisión (40 píxeles para evitar colisiones inmediatas)
+    const distanciaMinima = 40;
+    const arribaEnemigo = enemigo.y - distanciaMinima;
+    const abajoEnemigo = enemigo.y + enemigo.alto + distanciaMinima;
+    const derechaEnemigo = enemigo.x + enemigo.ancho + distanciaMinima;
+    const izquierdaEnemigo = enemigo.x - distanciaMinima;
 
     const arribaMascota = petPlayerObjeto.y;
     const abajoMascota = petPlayerObjeto.y + petPlayerObjeto.alto;
@@ -562,10 +646,15 @@ revisarColision = (enemigo)=> {
     }
 
     if(enemigo.x == undefined || enemigo.y == undefined){
+        console.warn("Enemigo sin posición:", enemigo);
         return
     }
+    
+    console.log("¡COLISIÓN DETECTADA CON:", enemigo.id);
+    // Iniciar combate
+    combateEnProgreso = true;
     detenerMovimiento();
-    clearInterval(intervalo);
+    if (intervalo) clearInterval(intervalo);
 
     enemigoId = enemigo.id
 
