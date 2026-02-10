@@ -21,8 +21,12 @@ const contenedorAtaques = document.getElementById('contenedor-ataques');
 const sectionMapa = document.getElementById('ver-mapa');
 const mapa = document.getElementById('mapa');
 
+// Conexión con Socket.IO
+const socket = io();
+
 let jugadorId = null;
 let enemigoId = null;
+let enemigoAtaques = null;
 let mokepones = [];
 let mokeponesEnemigos = [];
 let ataquePlayer = [];
@@ -50,6 +54,7 @@ mapaBackground.src = './assets/mokemap.png';
 let alturaBuscada;
 let anchoDelMapa = window.innerWidth - 20;
 const anchoMaximoMapa = 450;
+let combateEnProgreso = false;
 
 if (anchoDelMapa > anchoMaximoMapa) {
     anchoDelMapa = anchoMaximoMapa - 20;
@@ -170,16 +175,48 @@ iniciarJuego = ()=>{
 }
 
 unirseAlJuego = ()=> {
-    fetch("http://192.168.1.3:8080/unirse")
-        .then(function(res){
-            if (res.ok) {
-                res.text()
-                    .then(function(respuesta){
-                        console.log(respuesta);
-                        jugadorId = respuesta
-                    })
+    socket.emit("unirse");
+    
+    // Todos los listeners se registran UNA SOLA VEZ aquí
+    socket.on("id-asignado", (id) => {
+        jugadorId = id;
+        console.log("ID asignado:", jugadorId);
+    });
+
+    // Escuchar actualizaciones de enemigos para el mapa
+    socket.on("actualizar-enemigos", (enemigos) => {
+        console.log("Enemigos actualizados:", enemigos);
+        mokeponesEnemigos = enemigos.map(function(enemigo){
+            let mokeponEnemigo = null;
+            if (enemigo.mokepon != undefined) {
+                const mokeponNombre = enemigo.mokepon.nombre
+                if (mokeponNombre == "Hipodoge") {
+                mokeponEnemigo = new Mokepon ('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5, './assets/hipodoge.png', enemigo.id);
+                }else if (mokeponNombre == "Capipepo") {
+                mokeponEnemigo = new Mokepon ('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5, './assets/capipepo.png', enemigo.id);
+                }else if (mokeponNombre == "Ratigueya") {
+                mokeponEnemigo = new Mokepon ('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png', enemigo.id);
+                }
+
+                if (mokeponEnemigo) {
+                    mokeponEnemigo.x = enemigo.x || 0;
+                    mokeponEnemigo.y = enemigo.y || 0;
+                }
             }
+            return mokeponEnemigo
         })
+    });
+
+    // Listener para ataques del enemigo (registrado UNA SOLA VEZ)
+    socket.on("ataques-enemigo", (ataques) => {
+        console.log("Ataques recibidos del enemigo:", ataques);
+        if (ataques && ataques.length === 5 && !combateEnProgreso) {
+            attackEnemi = ataques;
+            combateEnProgreso = true;
+            clearInterval(intervalo);
+            combate();
+        }
+    });
 }
 
 seleccionarMascotaJugador = ()=>{
@@ -208,15 +245,10 @@ seleccionarMascotaJugador = ()=>{
 }
 
 selecionarMokepon = (mascotaPlayer) => {
-    fetch(`http://192.168.1.3:8080/mokepon/${jugadorId}`, {
-        method: "post",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            mokepon: mascotaPlayer
-        })
-    })
+    socket.emit("seleccionar-mokepon", {
+        jugadorId: jugadorId,
+        mokepon: mascotaPlayer
+    });
 }
 
 extraerAtaques = (mascotaPlayer)=> {
@@ -272,31 +304,22 @@ secuenciaAtaque = ()=> {
 }
 
 enviarAtaques = ()=> {
-    fetch(`http://192.168.1.3:8080/mokepon/${jugadorId}/ataques`, {
-        method: "post",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            ataques: ataquePlayer
-        })
-    })
-    intervalo = setInterval(obtenerAtaques, 50)
+    console.log("Enviando ataques:", ataquePlayer);
+    socket.emit("enviar-ataques", {
+        jugadorId: jugadorId,
+        ataques: ataquePlayer
+    });
+
+    // Polling para obtener ataques del enemigo
+    intervalo = setInterval(() => {
+        if (!combateEnProgreso) {
+            obtenerAtaques();
+        }
+    }, 100);
 }
 
 obtenerAtaques = ()=> {
-    fetch(`http://192.168.1.3:8080/mokepon/${enemigoId}/ataques`)
-        .then(function(res) {
-            if (res.ok) {
-                res.json()
-                    .then(function({ ataques }) {
-                        if (ataques.length == 5) {
-                            attackEnemi = ataques
-                            combate()
-                        }
-                    }) 
-            }
-        })
+    socket.emit("obtener-ataques", enemigoId);
 }
 
 seleccionarPetEnemi = (enemigo)=>{
@@ -341,6 +364,10 @@ indexOponentes = (player, enemi)=> {
 }
 
 combate = ()=> {
+    console.log("=== INICIANDO COMBATE ===");
+    console.log("Ataques jugador:", ataquePlayer);
+    console.log("Ataques enemigo:", attackEnemi);
+    
     clearInterval(intervalo)
     
     for (let index = 0; index < ataquePlayer.length; index++) {
@@ -398,6 +425,18 @@ mensajeFinal = (resultFinal)=> {
 
 
 replayGame = ()=>{
+    // Limpiar arrays y estado
+    ataquePlayer = [];
+    attackEnemi = [];
+    combateEnProgreso = false;
+    enemigoId = null;
+    enemigoAtaques = null;
+    
+    // Borrar resultados anteriores
+    resultadoPlayer.innerHTML = '';
+    resultadoEnemi.innerHTML = '';
+    sectionMensaje.innerHTML = 'Buena suerte!';
+    
     location.reload();
 }
 
@@ -435,43 +474,11 @@ pintarCanvas = ()=> {
 }
 
 enviarPosicion = (x, y)=> {
-    fetch(`http://192.168.1.3:8080/mokepon/${jugadorId}/posicion`, {
-        method: "post",
-        headers: {
-            "Content-Type": "application/JSON"
-        },
-        body: JSON.stringify({
-            x,
-            y
-        })
-    })
-    .then(function(res) {
-        if (res.ok) {
-            res.json()
-                .then(function({enemigos}) {
-                    console.log(enemigos);
-                    mokeponesEnemigos = enemigos.map(function(enemigo){
-                        let mokeponEnemigo = null;
-                        if (enemigo.mokepon != undefined) {
-                            const mokeponNombre = enemigo.mokepon.nombre
-                            if (mokeponNombre == "Hipodoge") {
-                            mokeponEnemigo = new Mokepon ('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5, './assets/hipodoge.png', enemigo.id);
-                            }else if (mokeponNombre == "Capipepo") {
-                            mokeponEnemigo = new Mokepon ('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5, './assets/capipepo.png', enemigo.id);
-                            }else if (mokeponNombre == "Ratigueya") {
-                            mokeponEnemigo = new Mokepon ('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5, './assets/ratigueya.png', enemigo.id);
-                            }
-
-                            mokeponEnemigo.x = enemigo.x
-                            mokeponEnemigo.y = enemigo.y
-                        }
-                         
-
-                        return mokeponEnemigo
-                    })
-                })
-        }
-    })
+    socket.emit("enviar-posicion", {
+        jugadorId: jugadorId,
+        x: x,
+        y: y
+    });
 }
 
 moverDerecha = ()=> {
