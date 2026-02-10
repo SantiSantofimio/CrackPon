@@ -1,4 +1,4 @@
-const btnRplay = document.getElementById('replay');
+const btnRplay = document.getElementById('reiniciar');
 const sectionSelectAttack = document.getElementById('select-attack');
 const botonMascotaJugador = document.getElementById('btn-select-pet');
 const botonReiniciar = document.getElementById('reiniciar');
@@ -167,9 +167,8 @@ iniciarJuego = ()=>{
             inputRatigueya = document.getElementById('Ratigueya');
     });
 
-    botonMascotaJugador.addEventListener('click',seleccionarMascotaJugador);
-
-    botonReiniciar.addEventListener('click', replayGame);
+    botonMascotaJugador.addEventListener('click', seleccionarMascotaJugador);
+    btnRplay.addEventListener('click', replayGame);
 
     unirseAlJuego();
 }
@@ -191,6 +190,11 @@ unirseAlJuego = ()=> {
         mokeponesEnemigos = [];
         
         enemigos.forEach(function(enemigo){
+            // Evitar crear un mokepon enemigo que sea el propio jugador
+            if (enemigo.id === jugadorId) {
+                return;
+            }
+
             if (enemigo.mokepon != undefined) {
                 const mokeponNombre = enemigo.mokepon.nombre;
                 let mokeponEnemigo = null;
@@ -482,35 +486,42 @@ mensajeFinal = (resultFinal)=> {
 
 replayGame = ()=>{
     try {
-        console.log("=== REINICIANDO JUEGO ===");
+        console.log("=== REINICIANDO JUEGO A SELECCIÓN DE MOKEPON ===");
+        
         // Limpiar arrays y estado de combate
         ataquePlayer = [];
         attackEnemi = [];
         combateEnProgreso = false;
         enemigoId = null;
         enemigoAtaques = null;
+        mascotaPlayer = null;
         
-        // IMPORTANTE: Limpiar enemigos para evitar colisiones inmediatas
+        // Limpiar enemigos
         mokeponesEnemigos = [];
         
-        // Borrar resultados y mensajes anteriores
+        // Limpiar UI de batalla
         resultadoPlayer.innerHTML = '';
         resultadoEnemi.innerHTML = '';
-        sectionMensaje.innerHTML = 'Buscando nuevos enemigos...';
+        sectionMensaje.innerHTML = '';
+        petEnemi.innerHTML = '';
+        petPlayer.innerHTML = '';
         btnRplay.style.display = 'none';
-        
-        // Limpiar contenedor de ataques
         contenedorAtaques.innerHTML = '';
         
-        // Volver a la pantalla del mapa
-        sectionSelectAttack.style.display = 'none';
-        sectionMapa.style.display = 'flex';
+        // Desmarcar todos los inputs de mokepon
+        inputHipodoge.checked = false;
+        inputCapipepo.checked = false;
+        inputRatigueya.checked = false;
         
-        // Reiniciar el intervalo de movimiento
+        // Detener intervalo del mapa
         if (intervalo) clearInterval(intervalo);
-        intervalo = setInterval(pintarCanvas, 50);
         
-        console.log("Juego reiniciado. Estado limpio.");
+        // Mostrar pantalla de selección de mokepon
+        sectionSelectPet.style.display = 'flex';
+        sectionSelectAttack.style.display = 'none';
+        sectionMapa.style.display = 'none';
+        
+        console.log("Juego reiniciado. Volviendo a seleccionar mokepon.");
     } catch (error) {
         console.error("Error en replayGame:", error);
         alert("Error al reiniciar el juego: " + error.message);
@@ -625,8 +636,16 @@ revisarColision = (enemigo)=> {
         return;
     }
 
-    // Aumentar distancia mínima de colisión (40 píxeles para evitar colisiones inmediatas)
-    const distanciaMinima = 40;
+    // Proteger contra estados no inicializados
+    if (!petPlayerObjeto) return;
+    if (enemigo.x == undefined || enemigo.y == undefined) {
+        // Enemigo sin posición: ignorar para evitar colisiones inmediatas
+        console.warn("Enemigo sin posición:", enemigo);
+        return;
+    }
+
+    // Aumentar distancia mínima de colisión (20 píxeles para evitar colisiones inmediatas)
+    const distanciaMinima = 20;
     const arribaEnemigo = enemigo.y - distanciaMinima;
     const abajoEnemigo = enemigo.y + enemigo.alto + distanciaMinima;
     const derechaEnemigo = enemigo.x + enemigo.ancho + distanciaMinima;
@@ -643,11 +662,6 @@ revisarColision = (enemigo)=> {
         izquierdaMascota > derechaEnemigo
     ) {
         return;
-    }
-
-    if(enemigo.x == undefined || enemigo.y == undefined){
-        console.warn("Enemigo sin posición:", enemigo);
-        return
     }
     
     console.log("¡COLISIÓN DETECTADA CON:", enemigo.id);

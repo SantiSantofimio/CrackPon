@@ -19,6 +19,12 @@ app.use(express.json())
 const jugadores = [];
 const batallas = {}; // Rastrear batallas activas
 
+// Dimensiones por defecto del mapa en servidor (aprox. cliente)
+const MAP_WIDTH = 400;
+const MAP_HEIGHT = 300;
+
+const MIN_DISTANCE_BETWEEN_PLAYERS = 120;
+
 class Jugador {
     constructor(id, socketId) {
         this.id = id;
@@ -49,10 +55,39 @@ class Mokepon {
 io.on("connection", (socket) => {
     console.log("Nuevo jugador conectado:", socket.id);
 
+    // Helper: generar posición aleatoria no colisionante
+    function generarPosicionLibre(existingPlayers) {
+        const maxAttempts = 20;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const x = Math.floor(Math.random() * (MAP_WIDTH - 100)) + 50;
+            const y = Math.floor(Math.random() * (MAP_HEIGHT - 100)) + 50;
+            // Verificar distancia mínima con jugadores existentes
+            let ok = true;
+            for (const p of existingPlayers) {
+                if (p.x !== undefined && p.y !== undefined) {
+                    const dx = p.x - x;
+                    const dy = p.y - y;
+                    const dist2 = dx * dx + dy * dy;
+                    if (dist2 < MIN_DISTANCE_BETWEEN_PLAYERS * MIN_DISTANCE_BETWEEN_PLAYERS) {
+                        ok = false;
+                        break;
+                    }
+                }
+            }
+            if (ok) return { x, y };
+        }
+        // Fallback: posición por defecto
+        return { x: 50, y: 50 };
+    }
+
     // Evento: Unirse al juego
     socket.on("unirse", () => {
         const id = `${Math.random()}`;
         const jugador = new Jugador(id, socket.id);
+        // Asignar posición inicial evitando colisiones con otros jugadores
+        const posicion = generarPosicionLibre(jugadores);
+        jugador.x = posicion.x;
+        jugador.y = posicion.y;
         jugadores.push(jugador);
         
         socket.emit("id-asignado", id);
@@ -67,9 +102,11 @@ io.on("connection", (socket) => {
         const jugadorIndex = jugadores.findIndex((jugador) => jugadorId === jugador.id);
         if (jugadorIndex >= 0) {
             jugadores[jugadorIndex].asignarMokepon(mokeponObj);
-            // Enviar solo los enemigos (no incluir al jugador actual)
-            const enemigos = jugadores.filter((jugador) => jugadorId !== jugador.id);
-            io.emit("actualizar-enemigos", enemigos);
+            // Enviar a cada jugador su lista de enemigos (filtrada por destinatario)
+            jugadores.forEach((j) => {
+                const enemigosParaEste = jugadores.filter((otro) => otro.id !== j.id);
+                io.to(j.socketId).emit("actualizar-enemigos", enemigosParaEste);
+            });
         }
     });
 
@@ -81,8 +118,11 @@ io.on("connection", (socket) => {
         if (jugadorIndex >= 0) {
             jugadores[jugadorIndex].actualizarPosicion(x, y);
             
-            const enemigos = jugadores.filter((jugador) => jugadorId !== jugador.id);
-            io.emit("actualizar-enemigos", enemigos);
+            // Emitir a cada jugador su lista de enemigos actualizada
+            jugadores.forEach((j) => {
+                const enemigosParaEste = jugadores.filter((otro) => otro.id !== j.id);
+                io.to(j.socketId).emit("actualizar-enemigos", enemigosParaEste);
+            });
         }
     });
 
